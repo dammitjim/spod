@@ -14,14 +14,14 @@ type Link struct {
 }
 
 func NewLink(uri string) *Link {
-    l := new(Link)
-    l.uri = uri
-    l.new = true
-    l.depth = 0
-    l.id = 0
-    l.parent = 0
-    l.failures = 0
-    return l
+	l := new(Link)
+	l.uri = uri
+	l.new = true
+	l.depth = 0
+	l.id = 0
+	l.parent = 0
+	l.failures = 0
+	return l
 }
 
 func (l *Link) loadDue(maxDepth int) (bool) {

@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/jackdanger/collectlinks"
 	"log"
-    "net/http"
+	"net/http"
 	"net/url"
 	"io/ioutil"
 	"bytes"
@@ -17,14 +17,14 @@ type Spider struct {
 }
 
 func NewSpider(name string) *Spider {
-    s := new(Spider)
-    s.name = name
-    return s
+	s := new(Spider)
+	s.name = name
+	return s
 }
 
 func (spider *Spider) crawl() {
 	
-  	resp, err := http.Get(spider.link.uri)
+	resp, err := http.Get(spider.link.uri)
 	if err != nil {
 		spider.link.failures++;
 		spider.link.save()
@@ -39,19 +39,19 @@ func (spider *Spider) crawl() {
 		if err != nil {
 				log.Fatal(err)
 		}
-  	
+	
 		// Restore the io.ReadCloser to its original state
 		resp.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 
 		// Find all the links
 		links := collectlinks.All(resp.Body)
-	  	for _, link := range(links) {
-	  		absolute := fixUrl(link, spider.link.uri)
+		for _, link := range(links) {
+			absolute := fixUrl(link, spider.link.uri)
 			if absolute != "" {
 
-	 			for n, _ := range(implementations) {
+				for n, _ := range(implementations) {
 					absolute = implementations[n].processUri(absolute)
-    			}				
+				}				
 
 				childLink := *NewLink(absolute)
 				childLink.depth = spider.link.depth + 1
@@ -68,32 +68,32 @@ func (spider *Spider) crawl() {
 					addLink(childLink) // @todo - store these somewhere and store on the main thread				
 				}
 
-	  		}
-	  	}
+			}
+		}
 
 		// Restore the io.ReadCloser to its original state
 		resp.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 
-	  	// Parse the HTML itself
-	  	doc, _ := html.Parse(resp.Body)  	
-	 	for n, _ := range(implementations) {
+		// Parse the HTML itself
+		doc, _ := html.Parse(resp.Body)  	
+		for n, _ := range(implementations) {
 			implementations[n].parseHTML(doc)
-    	}
+		}
 
-  	}
+	}
 
-  	crawling_completed(spider)
+	crawling_completed(spider)
 
 }
 
 func fixUrl(href, base string) (string) {
   uri, err := url.Parse(href)
   if err != nil {
-    return ""
+	return ""
   }
   baseUrl, err := url.Parse(base)
   if err != nil {
-    return ""
+	return ""
   }
   uri = baseUrl.ResolveReference(uri)
   return uri.String()

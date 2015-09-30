@@ -51,27 +51,27 @@ func main() {
 	//tests()
 	 for n, _ := range(implementations) {
 		implementations[n].prep()
-    }
+	}
 
 	// Allow an URL to be added into the system
-  	flag.Parse()
-  	args := flag.Args()
-  	if len(args) > 0 {
-  		log.Print("Adding seed")
- 		link := *NewLink(args[0]) 		
- 		addLink(link)
-  	}
+	flag.Parse()
+	args := flag.Args()
+	if len(args) > 0 {
+		log.Print("Adding seed")
+		link := *NewLink(args[0]) 		
+		addLink(link)
+	}
 
-  	// Seed it based on the implementation
+	// Seed it based on the implementation
 	 for n, _ := range(implementations) {
 		implementations[n].seed()
-    }
+	}
 
-  	// Spawn 3 spiders
-  	var spiders [3]Spider
-  	spiders[0] = *NewSpider("Bob")
-  	spiders[1] = *NewSpider("Ren")
-  	spiders[2] = *NewSpider("Pat")  	
+	// Spawn 3 spiders
+	var spiders [3]Spider
+	spiders[0] = *NewSpider("Bob")
+	spiders[1] = *NewSpider("Ren")
+	spiders[2] = *NewSpider("Pat")  	
 
 	completed := false
 
@@ -79,42 +79,42 @@ func main() {
 
 		var wg sync.WaitGroup
 
-	  	// Iterate across the spiders and keep them busy
-	  	for _,spider := range spiders {
+		// Iterate across the spiders and keep them busy
+		for _,spider := range spiders {
 
-	  		link := Link{}
-	  		if (link.loadDue(2)) {
+			link := Link{}
+			if (link.loadDue(2)) {
 
-		  		wg.Add(1)
-		  		go func(spider Spider, link Link) {
+				wg.Add(1)
+				go func(spider Spider, link Link) {
 					spider.link = link
-	 				if (spider.link.uri != "") {
-	 					//fmt.Printf("%s going to %s\n", spider.name, spider.link.uri)	
-		  				spider.crawl()
-		  			} else {
-		  				//fmt.Printf("%s has nowhere to go\n", spider.name)	
-		  			}
-		  			wg.Done()
-		  		}(spider, link)
+					if (spider.link.uri != "") {
+						//fmt.Printf("%s going to %s\n", spider.name, spider.link.uri)	
+						spider.crawl()
+					} else {
+						//fmt.Printf("%s has nowhere to go\n", spider.name)	
+					}
+					wg.Done()
+				}(spider, link)
 
-	  		}
+			}
 
-	  	}
+		}
 
-	  	wg.Wait()
+		wg.Wait()
 
-	  	// Check to see if it's completed yet
-	  	remainingLinks := countLinks(2)
+		// Check to see if it's completed yet
+		remainingLinks := countLinks(2)
 
-	  	clear()
+		clear()
 		fmt.Printf("%d links remaining\n", remainingLinks)	
-	  	if (remainingLinks == 0) {	  		
-	  		completed = true
-	  	}
+		if (remainingLinks == 0) {	  		
+			completed = true
+		}
 
-  	}  	
+	}  	
 
-  	fmt.Printf("All done, go home and be a family man")	
+	fmt.Printf("All done, go home and be a family man")	
 }
 
 func clear() {

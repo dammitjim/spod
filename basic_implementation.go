@@ -12,7 +12,7 @@ type BasicImplementation struct {
 func (i BasicImplementation) processUri(uri string) string {
 
 	// Strip out anchors from the URL
-  	reg, _ := regexp.Compile("#(.+)")
+	reg, _ := regexp.Compile("#(.+)")
 	uri = reg.ReplaceAllString(uri, "")
 	return uri;
 
