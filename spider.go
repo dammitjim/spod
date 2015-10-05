@@ -33,13 +33,16 @@ func (spider *Spider) crawl() {
 		defer resp.Body.Close()
 
 		// Read the content
-		var bodyBytes []byte
+		var bodyBytes []byte		
 
 		bodyBytes, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
 				log.Fatal(err)
 		}
 	
+		// Save the data
+		spider.link.saveData(bodyBytes)
+
 		// Restore the io.ReadCloser to its original state
 		resp.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 

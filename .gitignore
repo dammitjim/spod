@@ -1,4 +1,5 @@
-test_implementation.go
 test.go
+*_implementation.go
 *.sqlite
 *.exe
+data/*

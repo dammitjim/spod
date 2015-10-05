@@ -16,9 +16,12 @@ var implementations []Implementation
 
 func main() {
 
+	maxDepth := 4
+
 	// Spin up the and add it to the implementations slice
-	basicImplementation := new(BasicImplementation)
-	implementations = append(implementations, basicImplementation)
+	//basicImplementation := new(BasicImplementation)
+	gcloudImplementation := new(GcloudImplementation)
+	implementations = append(implementations, gcloudImplementation)
 
 	fmt.Print("Formatting environment")
 	os.Remove("./data.sqlite")
@@ -41,6 +44,19 @@ func main() {
 		failures INTEGER DEFAULT 0,
 		last_crawl DATETIME DEFAULT 0,
 		next_crawl DATETIME DEFAULT 0);`
+
+	_, err = db.Exec(sqlStmt)
+	if err != nil {
+		log.Printf("%q: %s\n", err, sqlStmt)
+		return
+	}
+
+	// Make sure the tables exist
+	sqlStmt = `CREATE TABLE IF NOT EXISTS data (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		uri TEXT,	
+		filename TEXT,	
+		added DATETIME DEFAULT CURRENT_TIMESTAMP);`
 
 	_, err = db.Exec(sqlStmt)
 	if err != nil {
@@ -83,7 +99,7 @@ func main() {
 		for _,spider := range spiders {
 
 			link := Link{}
-			if (link.loadDue(2)) {
+			if (link.loadDue(maxDepth)) {
 
 				wg.Add(1)
 				go func(spider Spider, link Link) {
@@ -104,7 +120,7 @@ func main() {
 		wg.Wait()
 
 		// Check to see if it's completed yet
-		remainingLinks := countLinks(2)
+		remainingLinks := countLinks(maxDepth)
 
 		clear()
 		fmt.Printf("%d links remaining\n", remainingLinks)	
