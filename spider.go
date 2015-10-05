@@ -46,6 +46,8 @@ func (spider *Spider) crawl() {
 		// Restore the io.ReadCloser to its original state
 		resp.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 
+		//@TODO - detect the type of file from the headers, don't try to parse links on binary etc
+
 		// Find all the links
 		links := collectlinks.All(resp.Body)
 		for _, link := range(links) {
@@ -68,7 +70,7 @@ func (spider *Spider) crawl() {
 				}
 
 				if (shouldFollow) {
-					addLink(childLink) // @todo - store these somewhere and store on the main thread				
+					addLink(childLink) //@TODO - store these somewhere in the local thread then sync at the end
 				}
 
 			}

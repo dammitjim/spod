@@ -80,7 +80,14 @@ func (l *Link) loadDue(maxDepth int) (bool) {
 
 	// Try to find a link due.
 	var uri string
-	err := db.QueryRow("SELECT uri FROM links WHERE next_crawl <= CURRENT_TIMESTAMP AND depth < ? ORDER BY next_crawl ASC LIMIT 1", maxDepth).Scan(&uri)
+	var err error
+
+	if (maxDepth > 0) {
+		err = db.QueryRow("SELECT uri FROM links WHERE next_crawl <= CURRENT_TIMESTAMP AND depth < ? ORDER BY next_crawl ASC LIMIT 1", maxDepth).Scan(&uri)
+	} else {
+		err = db.QueryRow("SELECT uri FROM links WHERE next_crawl <= CURRENT_TIMESTAMP ORDER BY next_crawl ASC LIMIT 1", maxDepth).Scan(&uri)
+	}
+	
 	if err != nil {
 		return false
 	} else {
@@ -122,7 +129,7 @@ func (l *Link) save() (bool) {
 			log.Fatal(err)
 		}
 
-		stmt, err := tx.Prepare("insert into links(uri, depth, failures, parent) values(?, ?, ?, ?)")
+		stmt, err := tx.Prepare("INSERT INTO links(uri, depth, failures, parent) values(?, ?, ?, ?)")
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -16,16 +16,17 @@ var implementations []Implementation
 
 func main() {
 
-	maxDepth := 4
+	// The maximum depth it will crawl until, or zero for infinite depth
+	maxDepth := 0
 
 	// Spin up the and add it to the implementations slice
 	//basicImplementation := new(BasicImplementation)
 	gcloudImplementation := new(GcloudImplementation)
 	implementations = append(implementations, gcloudImplementation)
 
-	fmt.Print("Formatting environment")
-	os.Remove("./data.sqlite")
-	fmt.Print("Opening database")
+	//fmt.Print("Formatting environment")
+	//os.Remove("./data.sqlite")
+	//fmt.Print("Opening database")
 
 	// Open the database
 	db, err = sql.Open("sqlite3", "file:data.sqlite")
@@ -144,13 +145,20 @@ func clear() {
 func countLinks(depth int) (count int) {
 
 	count = 0
-	err := db.QueryRow("SELECT COUNT(*) as count FROM links WHERE next_crawl <= CURRENT_TIMESTAMP AND depth < ?", depth).Scan(&count)
-	if err != nil {
-		log.Fatal(err)		
-	}	
+	if (depth > 0) {
+		err := db.QueryRow("SELECT COUNT(*) as count FROM links WHERE next_crawl <= CURRENT_TIMESTAMP AND depth < ?", depth).Scan(&count)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		err := db.QueryRow("SELECT COUNT(*) as count FROM links WHERE next_crawl <= CURRENT_TIMESTAMP", depth).Scan(&count)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	return count
 
-	
 }
 
 
