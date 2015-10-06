@@ -9,6 +9,8 @@ type BasicImplementation struct {
 
 }
 
+
+// Modify a new URI for clean up and other logic
 func (i BasicImplementation) processUri(uri string) string {
 
 	// Strip out anchors from the URL
@@ -18,26 +20,19 @@ func (i BasicImplementation) processUri(uri string) string {
 
 }
 
-func (i BasicImplementation) seed()  {
+// One time initiation code for this implementation
+func (i BasicImplementation) prep() {}
 
-	/*
-	link := *NewLink("http://www.google.com/")
-	addLink(link)
-	*/
+// Seed the starting links in the system
+func (i BasicImplementation) seed() {}
 
-}
+// Parse raw bytecode for a link
+func (i BasicImplementation) parseRaw(link Link, data []byte) {}
 
+// Parse HTML text for a link
+func (i BasicImplementation) parseHTML(link Link, node *html.Node) {}
 
-func (i BasicImplementation) prep()  {
-
-}
-
-
+// Logic to decide if a link should be followed or not
 func (i BasicImplementation) shouldFollowLink(link Link) bool  {
 	return true
 }
-
-func (i BasicImplementation) parseHTML(node *html.Node) {
-
-}
-

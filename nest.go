@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"sync"
-	"database/sql"	
+	"database/sql"
 )
 
 var db *sql.DB
@@ -21,12 +21,13 @@ func main() {
 
 	// Spin up the and add it to the implementations slice
 	//basicImplementation := new(BasicImplementation)
+	//exampleImplementation := new(ExampleImplementation)
 	gcloudImplementation := new(GcloudImplementation)
 	implementations = append(implementations, gcloudImplementation)
 
-	//fmt.Print("Formatting environment")
-	//os.Remove("./data.sqlite")
-	//fmt.Print("Opening database")
+	fmt.Print("Formatting environment\n")
+	os.Remove("./data.sqlite")
+	fmt.Print("Opening database\n")
 
 	// Open the database
 	db, err = sql.Open("sqlite3", "file:data.sqlite")
@@ -52,18 +53,7 @@ func main() {
 		return
 	}
 
-	// Make sure the tables exist
-	sqlStmt = `CREATE TABLE IF NOT EXISTS data (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		uri TEXT,	
-		filename TEXT,	
-		added DATETIME DEFAULT CURRENT_TIMESTAMP);`
-
-	_, err = db.Exec(sqlStmt)
-	if err != nil {
-		log.Printf("%q: %s\n", err, sqlStmt)
-		return
-	}
+	
 
 	//tests()
 	 for n, _ := range(implementations) {
@@ -106,10 +96,10 @@ func main() {
 				go func(spider Spider, link Link) {
 					spider.link = link
 					if (spider.link.uri != "") {
-						//fmt.Printf("%s going to %s\n", spider.name, spider.link.uri)	
+						//fmt.Printf("%s going to %s\n", spider.name, spider.link.uri)
 						spider.crawl()
 					} else {
-						//fmt.Printf("%s has nowhere to go\n", spider.name)	
+						//fmt.Printf("%s has nowhere to go\n", spider.name)
 					}
 					wg.Done()
 				}(spider, link)
@@ -124,14 +114,14 @@ func main() {
 		remainingLinks := countLinks(maxDepth)
 
 		clear()
-		fmt.Printf("%d links remaining\n", remainingLinks)	
-		if (remainingLinks == 0) {	  		
+		fmt.Printf("%d Links remaining\n", remainingLinks)
+		if (remainingLinks == 0) {
 			completed = true
 		}
 
-	}  	
+	}
 
-	fmt.Printf("All done, go home and be a family man")	
+	fmt.Printf("All done, go home and be a family man")
 }
 
 func clear() {

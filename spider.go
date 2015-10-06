@@ -40,8 +40,10 @@ func (spider *Spider) crawl() {
 				log.Fatal(err)
 		}
 	
-		// Save the data
-		spider.link.saveData(bodyBytes)
+
+		for n, _ := range(implementations) {
+			implementations[n].parseRaw(spider.link, bodyBytes)
+		}
 
 		// Restore the io.ReadCloser to its original state
 		resp.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
@@ -80,9 +82,9 @@ func (spider *Spider) crawl() {
 		resp.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 
 		// Parse the HTML itself
-		doc, _ := html.Parse(resp.Body)  	
+		doc, _ := html.Parse(resp.Body)
 		for n, _ := range(implementations) {
-			implementations[n].parseHTML(doc)
+			implementations[n].parseHTML(spider.link, doc)
 		}
 
 	}

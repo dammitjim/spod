@@ -2,11 +2,6 @@ package main
 
 import (
 	"log"	
-	"crypto/md5"
-	"encoding/hex"
-	"io/ioutil"
-	"fmt"	
-	"path"
 	_ "github.com/mattn/go-sqlite3"	
 )
 
@@ -28,52 +23,6 @@ func NewLink(uri string) *Link {
 	l.parent = 0
 	l.failures = 0
 	return l
-}
-
-
-func (l *Link) saveData(data []byte) (bool) {
-
-
-	hasher := md5.New()
-    hasher.Write([]byte(l.uri))
-    filename := hex.EncodeToString(hasher.Sum(nil))
-    extension := path.Ext(l.uri)
-
-    if (extension == "") {
-    	extension = ".html"
-    }
-
-	// Write it as a binary blob
-	filepath := fmt.Sprintf("data/%s%s", filename, extension)	// md5.Sum([]byte(l.uri))
-   	err := ioutil.WriteFile(filepath, data, 0644)
-	if err != nil {
-		log.Printf("%q: %s\n", err)
-		return false
-	}
-
-
-	tx, err := db.Begin()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	stmt, err := tx.Prepare("insert into data(uri, filename) values(?, ?)")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(l.uri, filepath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	tx.Commit()
-
-	//@TODO - write to the 'data' table to keep the link
-
-	return true
-
 }
 
 func (l *Link) loadDue(maxDepth int) (bool) {
@@ -172,7 +121,6 @@ func (l *Link) save() (bool) {
 
 }
 
-
 func (l *Link) load(uri string) (bool) {
 
 	// Reset some defaults
@@ -191,4 +139,3 @@ func (l *Link) load(uri string) (bool) {
 	return true
 
 }
-

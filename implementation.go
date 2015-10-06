@@ -9,5 +9,6 @@ type Implementation interface {
 	prep()	
 	processUri(uri string) string
 	shouldFollowLink(link Link) bool
-	parseHTML(node *html.Node)
+	parseHTML(link Link, node *html.Node)
+	parseRaw(link Link, data []byte)
 }
