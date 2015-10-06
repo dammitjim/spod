@@ -1,13 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"github.com/jackdanger/collectlinks"
+	"golang.org/x/net/html"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-	"io/ioutil"
-	"bytes"
-	"golang.org/x/net/html"
 )
 
 type Spider struct {
@@ -23,25 +23,24 @@ func NewSpider(name string) *Spider {
 }
 
 func (spider *Spider) crawl() {
-	
+
 	resp, err := http.Get(spider.link.uri)
 	if err != nil {
-		spider.link.failures++;
+		spider.link.failures++
 		spider.link.save()
 	} else {
 
 		defer resp.Body.Close()
 
 		// Read the content
-		var bodyBytes []byte		
+		var bodyBytes []byte
 
 		bodyBytes, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
-				log.Fatal(err)
+			log.Fatal(err)
 		}
-	
 
-		for n, _ := range(implementations) {
+		for n, _ := range implementations {
 			implementations[n].parseRaw(spider.link, bodyBytes)
 		}
 
@@ -52,26 +51,27 @@ func (spider *Spider) crawl() {
 
 		// Find all the links
 		links := collectlinks.All(resp.Body)
-		for _, link := range(links) {
+		toStore := []Link{}
+		for _, link := range links {
 			absolute := fixUrl(link, spider.link.uri)
 			if absolute != "" {
 
-				for n, _ := range(implementations) {
+				for n, _ := range implementations {
 					absolute = implementations[n].processUri(absolute)
-				}				
+				}
 
 				childLink := *NewLink(absolute)
 				childLink.depth = spider.link.depth + 1
 				childLink.parent = spider.link.id
 
 				shouldFollow := false
-				for n, _ := range(implementations) {
-					if (implementations[n].shouldFollowLink(childLink)) {
+				for n, _ := range implementations {
+					if implementations[n].shouldFollowLink(childLink) {
 						shouldFollow = true
 					}
 				}
 
-				if (shouldFollow) {
+				if shouldFollow {
 					addLink(childLink) //@TODO - store these somewhere in the local thread then sync at the end
 				}
 
@@ -83,7 +83,7 @@ func (spider *Spider) crawl() {
 
 		// Parse the HTML itself
 		doc, _ := html.Parse(resp.Body)
-		for n, _ := range(implementations) {
+		for n, _ := range implementations {
 			implementations[n].parseHTML(spider.link, doc)
 		}
 
@@ -93,15 +93,15 @@ func (spider *Spider) crawl() {
 
 }
 
-func fixUrl(href, base string) (string) {
-  uri, err := url.Parse(href)
-  if err != nil {
-	return ""
-  }
-  baseUrl, err := url.Parse(base)
-  if err != nil {
-	return ""
-  }
-  uri = baseUrl.ResolveReference(uri)
-  return uri.String()
+func fixUrl(href, base string) string {
+	uri, err := url.Parse(href)
+	if err != nil {
+		return ""
+	}
+	baseUrl, err := url.Parse(base)
+	if err != nil {
+		return ""
+	}
+	uri = baseUrl.ResolveReference(uri)
+	return uri.String()
 }

@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"golang.org/x/net/html"	
-	"strings"
-	"regexp"
 	"crypto/md5"
 	"encoding/hex"
-	"io/ioutil"	
-	"path"	
+	"fmt"
+	"golang.org/x/net/html"
+	"io/ioutil"
+	"log"
+	"path"
+	"regexp"
+	"strings"
 )
 
 /**
@@ -19,28 +19,27 @@ import (
  */
 
 type ExampleImplementation struct {
-
 }
 
 func (i ExampleImplementation) processUri(uri string) string {
 
 	// Strip out anchors from the URL
-  	reg, _ := regexp.Compile("#(.+)")
+	reg, _ := regexp.Compile("#(.+)")
 	uri = reg.ReplaceAllString(uri, "")
-	return uri;
+	return uri
 
 }
 
-func (i ExampleImplementation) seed()  {
+func (i ExampleImplementation) seed() {
 
 	// Seed the drupal search results
-	link := *NewLink("https://www.example.com/search?q=drupal")
+	//link := *NewLink("https://www.example.com/search?q=drupal")
+	link := *NewLink("http://www.giantbomb.com/videos")
 	addLink(link)
 
 }
 
-
-func (i ExampleImplementation) prep()  {
+func (i ExampleImplementation) prep() {
 
 	// Make sure the tables exist
 	sqlStmt := `CREATE TABLE IF NOT EXISTS data (
@@ -57,20 +56,20 @@ func (i ExampleImplementation) prep()  {
 
 }
 
-
-func (i ExampleImplementation) shouldFollowLink(link Link) bool  {
+func (i ExampleImplementation) shouldFollowLink(link Link) bool {
 
 	// Allow the usage of pagers
-	if (strings.Contains(link.uri, "search?q=drupal&page=")) {				
-		return true
-	}
-	
-	// Allow service details page
-	if (strings.Contains(link.uri, "/result/")) {		
+	if strings.Contains(link.uri, "search?q=drupal&page=") {
 		return true
 	}
 
-	return false
+	// Allow service details page
+	if strings.Contains(link.uri, "/result/") {
+		return true
+	}
+
+	return true
+	//return false
 
 }
 
@@ -78,24 +77,23 @@ func (i ExampleImplementation) parseHTML(link Link, node *html.Node) {
 
 }
 
-
 func (i ExampleImplementation) parseRaw(link Link, data []byte) {
 
 	hasher := md5.New()
-    hasher.Write([]byte(link.uri))
-    filename := hex.EncodeToString(hasher.Sum(nil))
-    extension := path.Ext(link.uri)
+	hasher.Write([]byte(link.uri))
+	filename := hex.EncodeToString(hasher.Sum(nil))
+	extension := path.Ext(link.uri)
 
-    if (extension == "") {
-    	extension = ".html"
-    }
+	if extension == "" {
+		extension = ".html"
+	}
 
 	// Write it as a binary blob
 	filepath := fmt.Sprintf("data/%s%s", filename, extension)
-   	err := ioutil.WriteFile(filepath, data, 0644)
+	err := ioutil.WriteFile(filepath, data, 0644)
 	if err != nil {
-		log.Printf("%q: %s\n", err)	
-		return;
+		log.Printf("%q: %s\n", err)
+		return
 	}
 
 	tx, err := db.Begin()
