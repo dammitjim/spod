@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -12,11 +13,22 @@ import (
 var db *sql.DB
 var err error
 var implementations []Implementation
+var names []string
+var namesInUse []bool
 
 func main() {
 
 	// The maximum depth it will crawl until, or zero for infinite depth
 	maxDepth := 0
+
+	// Add names here for your spiders :)
+	// Note that if you limit the concurrency to 3, only the first 3 will be used
+	names = append(names, "Spike", "Jet", "Fay")
+
+	// Building usage array for later
+	for i := 0; i < len(names); i++ {
+		namesInUse = append(namesInUse, false)
+	}
 
 	// Spin up the and add it to the implementations slice
 	//basicImplementation := new(BasicImplementation)
@@ -72,118 +84,101 @@ func main() {
 		implementations[n].seed()
 	}
 
-	//Spawn 3 spiders
-	var spiders [3]Spider
-	spiders[0] = *NewSpider("Bob")
-	spiders[1] = *NewSpider("Ren")
-	spiders[2] = *NewSpider("Pat")
-
-	names := []string{"Spike", "Jet", "Fay"}
-	namesInUse := []bool{false, false, false}
-
 	completed := false
 
 	// Define how many concurrent spiders
 	concurrency := 3
+
+	// Channel used to throttle the amount of goroutines
 	tasks := make(chan bool, concurrency)
 
 	for completed == false {
+
 		// Get initial link
 		link := Link{}
 		if link.loadDue(maxDepth) {
+
 			// Occupy a slot in the channel
 			tasks <- true
-			var name string
-			// Our spider needs a unique name!
-			for key, inUse := range namesInUse {
-				if inUse == false {
-					name = names[key]
-					namesInUse[key] = true
-					break
-				}
+
+			name, e := getAvailableName()
+			if e != nil {
+				fmt.Print(e)
 			}
+
+			// Our spider needs a unique name!
 			var spider = *NewSpider(name)
-			// Send our spider off to crawl
+
+			// Send our spider off to crawl in a goroutine
 			go func(spider Spider, link Link) {
+
 				spider.link = link
+
 				if spider.link.uri != "" {
-					defer func() {
-						// After we have finished crawling, calculate the next steps
+
+					fmt.Printf("%s going to %s\n", spider.name, spider.link.uri)
+					// Returns the crawl results as an array to be saved
+					linksToSave := spider.crawl()
+
+					// After this crawl has finished
+					defer func(links []Link) {
+
+						// Save links in main thread
+						for _, link := range links {
+							addLink(link)
+						}
+
+						// Calculate how much is remaining
 						remainingLinks := countLinks(maxDepth)
-						//clear()
 						fmt.Printf("%d Links remaining\n", remainingLinks)
+
 						if remainingLinks == 0 {
 							completed = true
 						}
-						for k, v := range names {
-							if v == spider.name {
-								namesInUse[k] = false
-								break
-							}
+
+						// Free up the name for use
+						if key, e := getArrayIndexByValue(names, spider.name); e == nil {
+							namesInUse[key] = false
+						} else {
+							fmt.Print(e)
 						}
+
 						// Free up the task
 						<-tasks
-					}()
-					fmt.Printf("%s going to %s\n", spider.name, spider.link.uri)
-					spider.crawl()
+					}(linksToSave)
 				} else {
-					// TODO DRY
-					for k, v := range names {
-						if v == spider.name {
-							namesInUse[k] = false
-							break
-						}
+					// TODO return error
+					if key, e := getArrayIndexByValue(names, spider.name); e == nil {
+						namesInUse[key] = false
+					} else {
+						fmt.Print(e)
 					}
-					//fmt.Printf("%s has nowhere to go\n", spider.name)
 					<-tasks
 				}
-				//wg.Done()
 			}(spider, link)
 		}
 	}
 
-	os.Exit(1)
-
-	for completed == false {
-
-		//Iterate across the spiders and keep them busy
-		for _, spider := range spiders {
-			link := Link{}
-			if link.loadDue(maxDepth) {
-				//wg.Add(1)
-				tasks <- true
-				go func(spider Spider, link Link) {
-					spider.link = link
-					if spider.link.uri != "" {
-						fmt.Printf("%s going to %s\n", spider.name, spider.link.uri)
-						spider.crawl()
-						defer func() { <-tasks }()
-					} else {
-						//fmt.Printf("%s has nowhere to go\n", spider.name)
-					}
-					//wg.Done()
-				}(spider, link)
-			}
-		}
-
-		for i := 0; i < cap(tasks); i++ {
-			tasks <- true
-		}
-
-		//wg.Wait()
-
-		// Check to see if it's completed yet
-		remainingLinks := countLinks(maxDepth)
-
-		clear()
-		fmt.Printf("%d Links remaining\n", remainingLinks)
-		if remainingLinks == 0 {
-			completed = true
-		}
-
-	}
-
 	fmt.Printf("All done, go home and be a family man")
+}
+
+func getAvailableName() (string, error) {
+	for key, inUse := range namesInUse {
+		if inUse == false {
+			namesInUse[key] = true
+			return names[key], nil
+		}
+	}
+	return "", errors.New("Nobody is currently available")
+}
+
+func getArrayIndexByValue(array []string, value string) (int, error) {
+	for k, v := range array {
+		if v == value {
+			return k, nil
+		}
+	}
+	return 0, errors.New("Value not found in array")
 }
 
 func clear() {

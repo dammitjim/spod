@@ -22,9 +22,11 @@ func NewSpider(name string) *Spider {
 	return s
 }
 
-func (spider *Spider) crawl() {
+func (spider *Spider) crawl() []Link {
 
+	toStore := []Link{}
 	resp, err := http.Get(spider.link.uri)
+
 	if err != nil {
 		spider.link.failures++
 		spider.link.save()
@@ -51,7 +53,6 @@ func (spider *Spider) crawl() {
 
 		// Find all the links
 		links := collectlinks.All(resp.Body)
-		toStore := []Link{}
 		for _, link := range links {
 			absolute := fixUrl(link, spider.link.uri)
 			if absolute != "" {
@@ -72,7 +73,8 @@ func (spider *Spider) crawl() {
 				}
 
 				if shouldFollow {
-					addLink(childLink) //@TODO - store these somewhere in the local thread then sync at the end
+					toStore = append(toStore, childLink)
+					//addLink(childLink) //@TODO - store these somewhere in the local thread then sync at the end
 				}
 
 			}
@@ -90,6 +92,7 @@ func (spider *Spider) crawl() {
 	}
 
 	crawling_completed(spider)
+	return toStore
 
 }
 

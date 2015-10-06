@@ -33,8 +33,7 @@ func (i ExampleImplementation) processUri(uri string) string {
 func (i ExampleImplementation) seed() {
 
 	// Seed the drupal search results
-	//link := *NewLink("https://www.example.com/search?q=drupal")
-	link := *NewLink("http://www.giantbomb.com/videos")
+	link := *NewLink("https://www.example.com/search?q=drupal")
 	addLink(link)
 
 }
@@ -68,8 +67,7 @@ func (i ExampleImplementation) shouldFollowLink(link Link) bool {
 		return true
 	}
 
-	return true
-	//return false
+	return false
 
 }
 
